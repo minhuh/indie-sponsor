@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ync.project.front.mapper.BookmarkMapper">
+
+	<select id="getList"
+		resultType="com.ync.project.domain.BookmarkVO">
+	<![CDATA[
+		SELECT 	userid,
+				reg_date,
+				content_id,
+				bookmark,
+				title,
+				tag
+		FROM 	(
+				SELECT /*+index(teamabookmark xpkteamabookmark */
+				 rownum rn,
+				 bk.userid,
+				 bk.reg_date,
+				 bk.content_id,
+				 bk.bookmark,
+				 c.title,
+				 c.tag
+				FROM teamabookmark bk,
+				     teamacreatercontent c
+				WHERE   c.content_id = bk.content_id
+				AND	 	rownum <= #{cri.pageNum} * #{cri.amount}
+				AND		bk.userid = #{userid}
+			   )
+			   WHERE rn > (#{cri.pageNum} -1) * #{cri.amount}
+			   AND   bookmark > 0
+			   	 
+		]]>
+	</select>
+	
+	<select id = "getListWithPaging"
+		resultType="com.ync.project.domain.BookmarkVO">
+		<![CDATA[
+		SELECT 	userid,
+				reg_date,
+				content_id,
+				bookmark
+		FROM 	(
+				SELECT /*+index(teamabookmark xpkteamabookmark */
+				 rownum rn,
+				 userid,
+				 reg_date,
+				 content_id,
+				 bookmark
+				FROM teamabookmark	
+				WHERE   userid = #{userid}
+				AND	 	rownum <= #{cri.pageNum} * #{cri.amount}
+			   ) WHERE rn > (#{cri.pageNum} -1) * #{cri.amount}
+			     AND   bookmark > 0
+			   	 
+		]]>
+	</select>
+	
+	<insert id="insert">
+		insert into teamabookmark (userid, content_id, bookmark)
+		values (#{userid}, #{content_id}, #{bookmark})
+	</insert> 
+
+	<!-- <insert id="insertSelectKey">
+
+		<selectKey keyProperty="content_id" order="BEFORE"
+			resultType="long">
+			select seq_board.nextval from dual
+		</selectKey>
+		<![CDATA[
+		insert into teamacreatercontent (title,content_intro,reg_date,highlight,tag,age_rate,
+		don_reg,game_launch,don_attainment,userid,platform,languages,media1,media2,media3,
+		media4,content_id,genre_id,hit,like_cnt)
+		values (#{title}, #{content_intro}, sysdate, sysdate, #{tag}, #{age_rate},
+		 sysdate, #{game_launch}, #{don_attainment}, #{userid}, #{platform}, #{languages},
+		 #{media1}, #{media2}, #{media3}, #{media4}, seq_reply.nextval, #{genre_id}, #{hit},
+		 #{like_cnt})
+		 ]]>
+	</insert> -->
+
+
+	<select id="read" resultType="com.ync.project.domain.BookmarkVO">
+	SELECT	content_id,
+			bookmark,
+			reg_date
+	FROM	teamabookmark
+	WHERE	content_id = #{content_id} 
+	</select>
+
+
+	<delete id="delete">
+		DELETE	teamabookmark
+		WHERE	bookmark = #{bookmark}
+	</delete>
+	
+	<insert id="bmkInsert">
+		insert into teamabookmark (userid, content_id, bookmark)
+		values (#{userid}, #{content_id}, 1)
+	</insert>
+	
+	<select id="bmkRead" resultType="com.ync.project.domain.BookmarkVO">
+	SELECT	content_id,
+			bookmark,
+			userid
+	FROM 	teamabookmark
+	WHERE 	content_id = #{content_id}
+	</select>
+	
+	<delete id="bmkDelete">
+		DELETE teamabookmark
+		WHERE  content_id = #{content_id}
+	</delete>
+	
+	<!-- <update id="update">
+		update teamacreatercontent
+		set 
+		title = #{title},
+		content_intro = #{content_intro},
+		reg_date = sysdate,
+		highlight = sysdate,
+		tag = #{tag},
+		age_rate = #{age_rate},
+		don_reg = sysdate,
+		game_launch = #{game_launch},
+		don_attainment = #{don_attainment},
+		userid = #{userid},
+		platform = #{platform},
+		languages = #{languages},
+		media1 = #{media1},
+		media2 = #{media2},
+		media3 = #{media3},
+		media4 = #{media4},
+		genre_id = #{genre_id},
+		hit = #{hit},
+		like_cnt = #{like_cnt}
+		where content_id = #{content_id}
+	</update> -->
+	
+	<select id="getTotalCount" resultType="int">
+	 SELECT count(*) FROM TEAMABOOKMARK
+	 WHERE bookmark > 0
+	</select>
+</mapper>

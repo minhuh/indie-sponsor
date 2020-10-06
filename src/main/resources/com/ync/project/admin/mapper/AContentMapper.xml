@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ync.project.admin.mapper.AContentMapper">
+
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+			<foreach item='type' collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'T'.toString()">
+							title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'C'.toString()">
+							content like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'W'.toString()">
+							writer like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+
+	<!--
+	member_auth table은 사용 하지 않고 AuthVO만 사용한다.
+	tbl_member 의 autho 컬럼 정보만 따로 담아는 객차이다.
+	Spring Security의 기본 사용법과 다르게 tbl_member에 권한 컴럼(auth)을
+	넣어서 사용하기에 기본 사용법과 달라진다.
+	-->
+	<select id="read" resultType="com.ync.project.domain.ContentVO">
+		SELECT	content_id,
+				NVL(userid, '-Nothing_in_here-') userid,
+				title,
+				reg_date,
+				highlight,
+				tag,
+				NVL(age_rate,'없음') age_rate,
+				don_reg,
+				game_launch,
+				platform,
+				languages,
+				media1,
+				media2,
+				media3,
+				media4,
+				genre_id,
+				NVL(hit, 1) hit,
+				NVL(like_cnt, 0) like_cnt  
+		FROM	teamacreatercontent
+		WHERE	content_id = #{content_id}
+	</select>
+	
+	
+	<select id="getList" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT  content_id,
+					NVL(userid, '-Nothing_in_here-') userid,
+					title,
+					reg_date,
+					highlight,
+					tag,
+					NVL(age_rate,'없음') age_rate,
+					don_reg,
+					game_launch,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					genre_id,
+					NVL(hit, 1) hit,
+					NVL(like_cnt, 0) like_cnt  
+			FROM    teamacreatercontent c
+		]]>
+	</select>
+
+
+	<insert id="insert">
+		<![CDATA[
+			INSERT	INTO	teamacreatercontent(
+								userid,
+								title,
+								highlight,
+								tag,
+								age_rate,
+								don_reg,
+								game_launch,
+								don_attainment,
+								platform,
+								languages,
+								media1,
+								media2,
+								media3,
+								media4,
+								genre_id
+							)
+							VALUES(
+								#{userid},
+								#{title},
+								#{highlight},
+								#{tag},
+								#{age_rate},
+								#{don_reg},
+								#{game_launch},
+								#{don_attainment},
+								#{platform},
+								#{media1},
+								#{media2},
+								#{media3},
+								#{media4},
+								#{genre_id}
+							)
+		]]>
+	</insert>
+
+
+	<update id="update">
+		<![CDATA[
+			UPDATE	teamacreatercontent
+			SET		title = #{title},
+					highlight = #{highlight},
+					tag = #{tag},
+					age_rate = #{age_rate},
+					don_reg = #{don_reg},
+					don_attainment = #{don_attainment},
+					userid = #{userid},
+					platform = #{platform},
+					languages = #{languages},
+					genre_id = #{genre_id}
+			WHERE	content_id = #{content_id}
+		]]>
+	</update>
+
+	<select id="getTotalCount" resultType="int">
+		SELECT	count(*)
+		FROM	teamacreatercontent
+	</select>
+	
+	<select id="getListWithPaging" resultType="com.ync.project.domain.ContentVO">
+		<![CDATA[
+			SELECT	content_id,
+					NVL(userid, '-Nothing_in_here-') userid,
+					title,
+					reg_date,
+					highlight,
+					tag,
+					NVL(age_rate,'없음') age_rate,
+					don_reg,
+					game_launch,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					genre_id,
+					NVL(hit, 1) hit,
+					NVL(like_cnt, 0) like_cnt  
+			FROM	(SELECT /*+INDEX_DESC(teamacreatercontent XPKTEAMACREATERCONTENT) */
+						rownum rn,
+        				content_id,
+						NVL(userid, '-Nothing_in_here-') userid,
+						title,
+						reg_date,
+						highlight,
+						tag,
+						NVL(age_rate,'없음') age_rate,
+						don_reg,
+						game_launch,
+						platform,
+						languages,
+						media1,
+						media2,
+						media3,
+						media4,
+						genre_id,
+						NVL(hit, 1) hit,
+						NVL(like_cnt, 0) like_cnt  
+      				FROM	teamacreatercontent
+					WHERE 
+  		]]>
+		<include refid="criteria"></include> 
+      
+		<![CDATA[    
+      			rownum <= #{pageNum} * #{amount}
+      			)
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<delete id="delete">
+		DELETE	FROM	teamacreatercontent
+				WHERE	content_id = #{content_id}
+	</delete>
+</mapper>

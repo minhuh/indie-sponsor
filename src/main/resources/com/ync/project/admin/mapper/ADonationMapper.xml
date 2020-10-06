@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ync.project.admin.mapper.ADonationMapper">
+
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+			<foreach item='type' collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'T'.toString()">
+							title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'C'.toString()">
+							content like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'W'.toString()">
+							writer like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+
+	<!--
+	member_auth table은 사용 하지 않고 AuthVO만 사용한다.
+	tbl_member 의 autho 컬럼 정보만 따로 담아는 객차이다.
+	Spring Security의 기본 사용법과 다르게 tbl_member에 권한 컴럼(auth)을
+	넣어서 사용하기에 기본 사용법과 달라진다.
+	-->
+	<select id="read_user" resultType="com.ync.project.domain.DonationVO">
+		SELECT	userid,
+				content_id,
+				donation,
+				don_reg_date,
+		FROM	teamadonation
+		WHERE	userid = #{userid} 
+	</select>
+	
+	<select id="read_content" resultType="com.ync.project.domain.DonationVO">
+		SELECT	userid,
+				content_id,
+				donation,
+				don_reg_date,
+		FROM	teamadonation
+		WHERE	content_id = #{content_id} 
+	</select>
+	
+	
+	<select id="getList" resultType="com.ync.project.domain.DonationVO">
+		SELECT	do.userid,
+				cc.title,
+			    do.donation,
+				do.don_reg_date
+		FROM	teamadonation do, teamaCreaterContent cc
+		WHERE   do.content_id = cc.content_id 
+	</select>
+
+	<select id="getGetDonation" resultType="com.ync.project.domain.GDonationVO">
+		SELECT  c.userid AS userid,
+        		sum(get_donation) AS donation
+		FROM    (SELECT don.content_id,
+               			sum(donation) AS get_donation
+        		FROM    teamadonation don
+        		GROUP BY don.content_id
+        		)cre,
+        		teamacreatercontent c
+		WHERE   c.content_id = cre.content_id
+		GROUP BY c.userid
+	</select>
+
+	<select id="getGiveDonation" resultType="com.ync.project.domain.GDonationVO">
+		SELECT  d.userid AS userid,
+        		sum(donation) AS donation
+		FROM    teamadonation d
+		GROUP BY d.userid
+	</select>
+
+	<select id="getTotalDonation" resultType="int">
+		SELECT  sum(donation) AS donation
+		FROM    teamadonation
+	</select>
+
+
+	<select id="creatersGetDonation" resultType="int">
+		SELECT  sum(donation) donation
+		FROM    (SELECT DISTINCT c.userid
+        		FROM    teamacreatercontent c,
+		                teamamember m
+		        WHERE   c.userid = m.userid
+		        AND     auth NOT LIKE 'ROLE_ADMIN'
+		        )noAdmin,
+		        teamadonation d
+		WHERE   noAdmin.userid = d.userid
+	</select>
+
+
+	<insert id="insert">
+		<![CDATA[
+			INSERT	INTO	teamadonation(
+								userid,
+								content_id,
+								donation
+							)
+							VALUES(
+								#{userid},
+								#{content_id},
+								#{donation}
+							)
+		]]>
+	</insert>
+
+	<update id="update">
+		<![CDATA[
+			UPDATE	teamadonation
+			SET		userid = #{userid},
+					content_id = #{content_id},
+					donation = #{donation}
+			WHERE	userid = #{userid} AND content_id = #{content_id}
+		]]>
+	</update>
+
+	<select id="getTotalCount" resultType="int">
+		SELECT	count(*)
+		FROM	teamadonation
+		WHERE	
+				<include refid="criteria"></include>
+				userid IS NOT NULL
+	</select>
+	
+	<select id="getListWithPaging" resultType="com.ync.project.domain.DonationVO">
+		<![CDATA[
+			SELECT	userid,
+        			content_id,
+    	    		donation,
+        			don_reg_date
+        			
+			FROM	(SELECT /*+INDEX_DESC(teamadonation XPKTEAMADONATION) */
+						rownum rn,
+        				userid,
+						content_id,
+						donation,
+						don_reg_date
+      				FROM	teamadonation,
+					WHERE
+  		]]>
+							<include refid="criteria"></include> 
+      
+		<![CDATA[    
+			      			rownum <= #{pageNum} * #{amount}
+			      			
+      				)
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	
+	<select id="getListWithPagingAndContent" resultType="com.ync.project.domain.DonationVO">
+		<![CDATA[
+			SELECT	userid,
+        			title,
+    	    		donation,
+        			don_reg_date
+			FROM	(SELECT /*+INDEX_DESC(teamadonation XPKTEAMADONATION) */
+							rownum rn,
+        					do.userid,
+        					cc.title,
+    	    				do.donation,
+        					do.don_reg_date
+      				FROM	teamadonation do, teamaCreaterContent cc
+					WHERE
+  		]]>
+							<include refid="criteria"></include> 
+      
+		<![CDATA[    
+			      			rownum <= #{pageNum} * #{amount}
+			      	AND 	do.content_id = cc.content_id 		
+      				)
+  			WHERE	rn > (#{pageNum} -1) * #{amount}
+		]]>
+	</select>
+	
+	<delete id="delete">
+		DELETE	FROM	teamadonation
+				WHERE	userid = #{userid}
+				AND		content_id = #{content_id}
+	</delete>
+</mapper>

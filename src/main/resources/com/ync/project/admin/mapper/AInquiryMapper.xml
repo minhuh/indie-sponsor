@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ync.project.admin.mapper.AInquiryMapper">
+
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+			<foreach item='type' collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'T'.toString()">
+							title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'C'.toString()">
+							content like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'W'.toString()">
+							writer like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+	
+	
+	<select id="read" resultType="com.ync.project.domain.InquiryVO">
+		<![CDATA[
+			SELECT	inquiry_id,
+					title,
+					reg_date,
+					NVL(comment_date, (sysdate - 1000)) AS comment_date,
+					userid,
+					content,
+					NVL(comments, '-') AS comments
+			FROM	teamainquiry
+			WHERE	inquiry_id = #{inquiry_id}
+		]]>
+	</select>
+	
+	
+	<select id="getList" resultType="com.ync.project.domain.InquiryVO">
+		SELECT  *
+		FROM    teamainquiry
+	</select>
+
+
+	<insert id="insert">
+		<![CDATA[
+			INSERT	INTO	teamainquiry(
+								title,
+								userid,
+								content
+							)
+							VALUES(
+								#{title},
+								#{userid},
+								#{content}
+							)
+		]]>
+	</insert>
+	
+	<update id="insertComment">
+		<![CDATA[
+			UPDATE	teamainquiry
+			SET		comments = #{comments},
+					comment_date = sysdate
+			WHERE	inquiry_id = #{inquiry_id}
+		]]>
+	</update>
+
+	<update id="update">
+		<![CDATA[
+			UPDATE	teamainquiry
+			SET		title = #{title},
+					content = #{content}
+			WHERE	inquiry_id = #{inquiry_id}
+		]]>
+	</update>
+
+	<select id="getTotalCount" resultType="int">
+		SELECT	count(*)
+		FROM	teamainquiry
+	</select>
+	
+	<select id="getListWithPaging" resultType="com.ync.project.domain.InquiryVO">
+		<![CDATA[
+			SELECT	inquiry_id,
+					title,
+					reg_date,
+					comment_date,
+					comments,
+					userid,
+					content
+			FROM	(SELECT /*+INDEX_DESC(teamainquiry XPKTEAMAINQUIRY) */
+						rownum rn,
+        				inquiry_id,
+						title,
+						reg_date,
+						comment_date,
+						comments,
+						userid,
+						content
+      				FROM	teamainquiry
+					WHERE 
+  		]]>
+		<include refid="criteria"></include> 
+      
+		<![CDATA[    
+      			rownum <= #{pageNum} * #{amount}
+      			)
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<delete id="delete">
+		DELETE	FROM	teamainquiry
+				WHERE	inquiry_id = #{inquiry_id}
+	</delete>
+</mapper>

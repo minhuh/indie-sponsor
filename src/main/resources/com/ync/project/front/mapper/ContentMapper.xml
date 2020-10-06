@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ync.project.front.mapper.ContentMapper">
+
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+			<foreach item='type' collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'T'.toString()">
+							title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'C'.toString()">
+							content like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'W'.toString()">
+							writer like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+	
+	<select id="getList"
+		resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					genre_id,
+					hit,like_cnt
+			FROM	(SELECT ROW_NUMBER() OVER(ORDER BY reg_date DESC) AS rank_num,
+							title,
+							content_intro,
+							reg_date,
+							highlight,
+							tag,
+							age_rate,
+							don_reg,
+							game_launch,
+							don_attainment,
+							userid,
+							platform,
+							languages,
+							media1,
+							media2,
+							media3,
+							media4,
+							content_id,
+							genre_id,
+							hit,like_cnt
+							FROM TEAMACREATERCONTENT)
+			WHERE	rank_num BETWEEN 2 AND 9
+		]]>
+	</select>
+
+	<insert id="insert">
+		<selectKey keyProperty="content_id" order="BEFORE"
+			resultType="long">
+			SELECT seq_content.nextval
+			FROM dual
+		</selectKey>
+		INSERT INTO teamacreatercontent(
+		title,
+		content_intro,
+		reg_date,
+		highlight,
+		tag,
+		age_rate,
+		don_reg,
+		game_launch,
+		don_attainment,
+		userid,
+		platform,
+		languages,
+		media1,
+		media2,
+		media3,
+		media4,
+		content_id,
+		genre_id
+		)
+		VALUES(
+		#{title},
+		#{content_intro},
+		sysdate,
+		sysdate,
+		#{tag},
+		#{age_rate},
+		sysdate,
+		#{game_launch},
+		#{don_attainment},
+		#{userid},
+		#{platform},
+		#{languages},
+		#{media1},
+		#{media2},
+		#{media3},
+		#{media4},
+		seq_content.nextval,
+		#{genre_id}
+		)
+	</insert>
+
+	<insert id="insertSelectKey">
+		<selectKey keyProperty="content_id" order="BEFORE"
+			resultType="long">
+			SELECT seq_content.nextval
+			FROM dual
+		</selectKey>
+		<![CDATA[
+		INSERT	INTO	    teamacreatercontent(
+							title,
+							content_intro,
+							reg_date,
+							highlight,
+							tag,
+							age_rate,
+							don_reg,
+							game_launch,
+							don_attainment,
+							userid,
+							platform,
+							languages,
+							media1,
+							media2,
+							media3,
+							media4,
+							content_id,
+							genre_id
+						)
+						VALUES(
+							#{title},
+							#{content_intro},
+							sysdate, 
+							sysdate, 
+							#{tag}, 
+							#{age_rate},
+							sysdate, 
+							#{game_launch}, 
+							#{don_attainment}, 
+							#{userid}, 
+							#{platform}, 
+							#{languages},
+							#{media1}, 
+							#{media2}, 
+							#{media3}, 
+							#{media4}, 
+							seq_content.nextval, 
+							#{genre_id}
+						)
+		 ]]>
+	</insert>
+
+
+	<select id="read" resultType="com.ync.project.domain.ContentVO">	
+		
+		SELECT  tc.TITLE,
+				tc.CONTENT_ID,
+				tc.AGE_RATE,
+				tc.LANGUAGES,
+				tc.MEDIA1,
+				tc.MEDIA2,
+				tc.MEDIA3,
+				tc.MEDIA4,
+				tc.CONTENT_INTRO,
+				tc.GAME_LAUNCH,
+				tc.TAG,
+				tc.PLATFORM,
+				gr.genre_name,		
+				tm.creater_name
+		FROM    teamacreatercontent tc, teamamember tm, teamagenre gr
+		WHERE 	content_id = #{content_id}
+		AND   	tc.userid = tm.userid
+		AND     tc.genre_id = gr.genre_id
+	</select>
+
+	<update id="readHit">
+		UPDATE	teamacreatercontent
+		SET		hit = hit + 1
+		WHERE	content_id = #{content_id}
+	</update>
+
+	<delete id="delete">
+		DELETE teamacreatercontent
+		WHERE content_id =
+		#{content_id}	
+	</delete>
+
+	<update id="update">
+		UPDATE teamacreatercontent
+		SET
+		title = #{title},
+		content_intro = #{content_intro},
+		reg_date = #{reg_date},
+		highlight = sysdate,
+		tag = #{tag},
+		age_rate = #{age_rate},
+		don_reg = sysdate,
+		game_launch = #{game_launch},
+		don_attainment = #{don_attainment},
+		userid = #{userid},
+		platform = #{platform},
+		languages = #{languages},
+		media1 = #{media1},
+		media2 = #{media2},
+		media3 = #{media3},
+		media4 = #{media4},
+		genre_id = #{genre_id},
+		hit = #{hit},
+		like_cnt = #{like_cnt}
+		WHERE content_id = #{content_id}
+	</update>
+</mapper>

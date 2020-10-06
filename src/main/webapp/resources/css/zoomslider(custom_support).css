@@ -1,0 +1,9 @@
+.zs-enabled .zs-slideshow .zs-bullets {
+  visibility: hidden;
+}
+
+#demo-1{
+  position: absolute;
+  width:100%;
+  height:100%;
+}

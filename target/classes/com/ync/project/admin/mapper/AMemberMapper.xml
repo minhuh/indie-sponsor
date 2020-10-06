@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ync.project.admin.mapper.AMemberMapper">
+
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+			<foreach item='type' collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'T'.toString()">
+							title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'C'.toString()">
+							content like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'W'.toString()">
+							writer like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+
+	
+	<select id="read" resultType="com.ync.project.domain.MemberVO">
+	<![CDATA[
+		SELECT	userid,
+				name,
+				birth,
+				NVL(phone,'없음') phone,
+				creater_name,
+				NVL(bank_account,'-') bank_account,
+				NVL(donation_accept, '-') donation_accept,
+				levels,
+				NVL(status, '값이없음') status,
+				NVL(sns,'없음') sns,
+        		NVL(other_address,'없음') other_address,
+				auth
+		FROM	teamamember
+		WHERE	userid = #{userid}
+	]]>
+	</select>
+	
+	
+	<select id="getList" resultType="com.ync.project.domain.MemberVO">
+	<![CDATA[
+			SELECT  userid,
+        			name,
+    	    		userpw,
+        			birth,
+        			NVL(phone,'없음') phone,
+        			creater_name,
+        			NVL(bank_account,'없음') bank_account,
+        			levels,
+        			status,
+        			NVL(sns,'없음') sns,
+        			NVL(other_address,'없음') other_address
+			FROM    teamamember m
+		]]>
+	</select>
+	
+	<select id="getAdminList" resultType="com.ync.project.domain.MemberVO">
+	<![CDATA[
+			SELECT	userid, 
+					name,
+					phone,
+					levels
+			FROM 	TEAMAMEMBER
+			WHERE   levels='A'
+			OR		levels='B'
+			OR		levels='C'
+		]]>
+	</select>
+	
+	<select id="getAdminListWithPaging" resultType="com.ync.project.domain.MemberVO">
+		<![CDATA[
+			SELECT	userid,
+        			name,    	    	
+        			NVL(phone,'없음') phone,
+        			NVL(levels,'없음') levels
+			FROM	(SELECT /*+INDEX_DESC(teamamember XPKTEAMAMEMBER) */
+						rownum rn,
+        				userid,
+						name,
+						phone,
+						levels
+      				FROM	teamamember
+					WHERE 
+		  		]]>
+				<include refid="criteria"></include> 
+		      
+				<![CDATA[    
+		      			rownum <= #{pageNum} * #{amount}
+		      		AND levels 		BETWEEN  'A'  AND 'C'
+		      	   )
+		      		
+  			WHERE rn > (#{pageNum} -1) * #{amount}	
+		]]>
+	</select>
+
+	<select id="getGetDonation" resultType="com.ync.project.domain.GDonationVO">
+		<![CDATA[
+			SELECT  c.userid AS userid,
+        			sum(get_donation) AS donation
+			FROM    (SELECT don.content_id,
+                			sum(donation) AS get_donation
+        			FROM    teamadonation don
+        			GROUP BY don.content_id
+        			)cre,
+        			teamacreatercontent c
+			WHERE   c.content_id = cre.content_id
+			GROUP BY c.userid
+		]]>
+	</select>
+
+	<select id="getGetDonationToUser" resultType="com.ync.project.domain.GDonationVO">
+		<![CDATA[
+			SELECT  NVL(sum(get_donation), 0) AS donation
+			FROM    (SELECT don.content_id,
+                			sum(don.donation) AS get_donation
+        			FROM    teamadonation don
+        			GROUP BY don.content_id
+        			)cre,
+        			teamacreatercontent c
+			WHERE   c.content_id = cre.content_id
+			AND     c.userid = #{userid}
+		]]>
+	</select>
+
+	<select id="getGiveDonation" resultType="com.ync.project.domain.GDonationVO">
+		SELECT  d.userid AS userid,
+        		sum(donation) AS donation
+		FROM    teamadonation d
+		GROUP BY d.userid
+	</select>
+
+
+	<insert id="insert">
+		<![CDATA[
+			INSERT	INTO	teamamember(
+								userid,
+								name,
+								birth,
+								phone,
+								userpw,
+								creater_name,
+								bank_account,
+								donation_accept,
+								levels,
+								status,
+								sns,
+								other_address
+							)
+							VALUES(
+								#{userid},
+								#{name},
+								#{birth},
+								#{phone},
+								#{userpw},
+								#{creater_name},
+								#{bank_account},
+								#{donation_accept},
+								1,
+								#{status},
+								#{sns},
+								#{other_address}
+							)
+		]]>
+	</insert>
+	
+	<insert id="admin_insert">
+	<![CDATA[
+			INSERT	INTO	teamamember(
+								userid,
+								name,
+								birth,
+								phone,
+								userpw,
+								levels,
+								auth
+							)
+							VALUES(
+								#{userid},
+								#{name},
+								#{birth},
+								#{phone},
+								#{userpw},
+								#{levels},
+								#{auth}
+							)
+		]]>
+	</insert>
+
+	<update id="update">
+		<![CDATA[
+			UPDATE	teamamember
+			SET		phone = #{phone},
+					userpw = #{userpw},
+					bank_account = #{bank_account},
+					sns = #{sns},
+					other_address = #{other_address}
+			WHERE	userid = #{userid}
+		]]>
+	</update>
+	
+	<update id="revoke">
+		<![CDATA[
+			UPDATE	teamamember
+			SET		levels = 1, auth = 'ROLE_USER'
+			WHERE	userid = #{user_id}
+		]]>
+	</update>
+
+	<update id="creater_modify">
+		<![CDATA[
+			UPDATE	teamamember
+			SET		auth = 'ROLE_USER'
+			WHERE	userid = #{userid}
+		]]>
+	</update>
+	
+	<update id="creater_status">
+		<![CDATA[
+			UPDATE	teamamember
+			SET		status = '1'
+			WHERE	userid = #{userid}
+		]]>
+	</update>
+	
+	<update id="creater_accept">
+		<![CDATA[
+			UPDATE	teamamember
+			SET		levels = 'B',
+					status = '1',
+					auth = 'ROLE_CREATER'
+			WHERE	userid = #{userid}
+		]]>
+	</update>
+	
+	<update id="creater_cancle">
+		<![CDATA[
+			UPDATE	teamamember
+			SET		creater_name = NULL,
+					bank_account = NULL,
+					status = '1',
+					sns = NULL
+			WHERE	userid = #{userid}
+		]]>
+	</update>
+
+	<select id="getTotalCount" resultType="int">
+		SELECT	count(*)
+		FROM	teamamember
+		WHERE	
+				<include refid="criteria"></include>
+				userid IS NOT NULL
+	</select>
+	
+	<select id="getTotalCreater" resultType="int">
+		SELECT	count(*)
+		FROM	teamamember
+		WHERE	
+				<include refid="criteria"></include>
+				auth LIKE 'ROLE_CREATER'
+	</select>
+	
+	<select id="getTotalUser" resultType="int">
+		SELECT	count(*)
+		FROM	teamamember
+		WHERE	
+				<include refid="criteria"></include>
+				auth LIKE 'ROLE_USER'
+	</select>
+	
+	<select id="getTotalAdmin" resultType="int">
+		SELECT	count(*)
+		FROM	teamamember
+		WHERE	
+				<include refid="criteria"></include>
+				auth LIKE 'ROLE_ADMIN'
+	</select>
+	
+	<select id="getActiveUser" resultType="int">
+		SELECT	count(*)
+		FROM	teamamember
+		WHERE	
+				<include refid="criteria"></include>
+				status LIKE 1
+	</select>
+	
+	<select id="getListWithPaging" resultType="com.ync.project.domain.MemberVO">
+		<![CDATA[
+			SELECT	userid,
+        			name,
+    	    		userpw,
+        			NVL(birth,'없음') birth,
+        			NVL(phone,'없음') phone,
+        			NVL(creater_name,'없음') creater_name,
+        			NVL(bank_account,'없음') bank_account,
+        			NVL(levels,'없음') levels,
+        			NVL(status,'없음') status,
+        			NVL(sns,'없음') sns,
+        			NVL(other_address,'없음') other_address
+			FROM	(SELECT /*+INDEX_DESC(teamamember XPKTEAMAMEMBER) */
+						rownum rn,
+        				userid,
+						name,
+						birth,
+						phone,
+						userpw,
+						creater_name,
+						bank_account,
+						levels,
+						status,
+						sns,
+						other_address
+      				FROM	teamamember
+					WHERE 
+  		]]>
+		<include refid="criteria"></include> 
+      
+		<![CDATA[    
+      			rownum <= #{pageNum} * #{amount}
+      			)
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<select id="getListWithPagingWithCreater" resultType="com.ync.project.domain.MemberVO">
+		<![CDATA[
+			SELECT	userid,
+        			name,
+    	    		userpw,
+        			birth,
+        			NVL(phone,'없음') phone,
+        			creater_name,
+        			NVL(bank_account,'없음') bank_account,
+        			levels,
+        			status,
+        			NVL(sns,'없음') sns,
+        			NVL(other_address,'없음') other_address
+			FROM	(SELECT /*+INDEX_DESC(teamamember pk_board) */
+						rownum rn,
+        				userid,
+						name,
+						birth,
+						phone,
+						userpw,
+						creater_name,
+						bank_account,
+						levels,
+						status,
+						sns,
+						other_address
+      				FROM	teamamember
+					WHERE 	auth LIKE 'ROLE_CREATER' AND status LIKE '1' AND levels LIKE 'B' AND
+  		]]>
+		<include refid="criteria"></include> 
+      
+		<![CDATA[    
+      			rownum <= #{pageNum} * #{amount}
+      			)
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<select id="getListWithPagingWithCreater_request" resultType="com.ync.project.domain.MemberVO">
+		<![CDATA[
+			SELECT	userid,
+        			name,
+    	    		userpw,
+        			birth,
+        			NVL(phone,'없음') phone,
+        			creater_name,
+        			NVL(bank_account,'없음') bank_account,
+        			levels,
+        			status,
+        			NVL(sns,'없음') sns,
+        			NVL(other_address,'없음') other_address
+			FROM	(SELECT /*+INDEX_DESC(teamamember pk_board) */
+						rownum rn,
+        				userid,
+						name,
+						birth,
+						phone,
+						userpw,
+						creater_name,
+						bank_account,
+						levels,
+						status,
+						sns,
+						other_address
+      				FROM	teamamember
+					WHERE 	auth LIKE 'ROLE_USER' AND status LIKE '2' AND levels LIKE 'C' AND
+  		]]>
+		<include refid="criteria"></include> 
+      
+		<![CDATA[    
+      			rownum <= #{pageNum} * #{amount}
+      			)
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<delete id="delete">
+		DELETE	FROM	teamamember
+				WHERE	userid = #{userid}
+	</delete>
+</mapper>

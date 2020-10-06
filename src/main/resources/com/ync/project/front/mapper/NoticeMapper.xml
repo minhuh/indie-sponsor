@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ync.project.front.mapper.NoticeMapper">
+
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+			<foreach item='type' collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'T'.toString()">
+							title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'C'.toString()">
+							content like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'W'.toString()">
+							writer like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+	
+	<select id="getList"
+		resultType="com.ync.project.domain.NoticeVO">
+	<![CDATA[
+		SELECT	*
+		FROM	teamanotice
+		WHERE	notice_id >= 0 
+		]]>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO teamanotice(
+		notice_id,
+		title,
+		reg_date,
+		content,
+		highlight,
+		hit,
+		media1,
+		media2,
+		userid
+		)
+		VALUES(
+		seq_reply.nextval,
+		#{title},
+		sysdate,
+		#{content},
+		sysdate,
+		0,
+		#{media1},
+		#{media2},
+		#{userid}
+		)
+	</insert>
+
+	<insert id="insertSelectKey">
+
+		<selectKey keyProperty="notice_id" order="BEFORE"
+			resultType="long">
+			SELECT seq_board.nextval
+			FROM dual
+		</selectKey>
+		<![CDATA[
+		INSERT INTO teamanotice(
+		notice_id,
+		title,
+		reg_date,
+		content,
+		highlight,
+		hit,
+		media1,
+		media2,
+		userid
+		)
+		VALUES(
+		seq_reply.nextval,
+		#{title},
+		sysdate,
+		#{content},
+		sysdate,
+		0,
+		#{media1},
+		#{media2},
+		#{userid}
+		)
+		 ]]>
+	</insert>
+
+
+	<select id="read" resultType="com.ync.project.domain.NoticeVO">
+		SELECT *
+		FROM teamanotice
+		WHERE
+		notice_id = #{notice_id}
+	</select>
+
+
+	<delete id="delete">
+		DELETE teamanotice
+		WHERE notice_id = #{notice_id}
+	</delete>
+
+	<update id="update">
+		UPDATE teamanotice
+		SET
+		title = #{title},
+		reg_date = sysdate,
+		content = #{content},
+		highlight = sysdate,
+		hit = #{hit},
+		media1 = #{media1},
+		media2 = #{media2},
+		userid = #{userid}
+		WHERE notice_id = #{notice_id}
+	</update>
+
+	<select id="getTotalCount" resultType="int">
+		select count(*) from teamanotice where
+
+		<include refid="criteria"></include>
+
+		notice_id > 0
+
+	</select>
+	
+	<select id="getListWithPaging" resultType="com.ync.project.domain.NoticeVO">
+		<![CDATA[
+		SELECT	notice_id,
+				title,
+				reg_date,
+				content,
+				highlight,
+				hit,
+				media1,
+				media2,
+				userid
+		FROM	(SELECT /*+INDEX_DESC(teamanotice XPKXIF1TEAMANOTICE) */
+						rownum rn,
+        				notice_id,
+						title,
+						reg_date,
+						content,
+						highlight,
+						hit,
+						media1,
+						media2,
+						userid
+      			FROM	teamanotice
+				WHERE 
+  		]]>
+		<include refid="criteria"></include> 
+      
+		<![CDATA[    
+      			rownum <= #{pageNum} * #{amount}
+      			)
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+</mapper>

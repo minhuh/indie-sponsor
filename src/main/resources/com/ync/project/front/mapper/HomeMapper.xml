@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ync.project.front.mapper.HomeMapper">
+
+	<select id="getlatestList"
+		resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					genre_id,
+					hit,like_cnt
+			FROM	(SELECT ROW_NUMBER() OVER(ORDER BY reg_date DESC) AS rank_num,
+							title,
+							content_intro,
+							reg_date,
+							highlight,
+							tag,
+							age_rate,
+							don_reg,
+							game_launch,
+							don_attainment,
+							userid,
+							platform,
+							languages,
+							media1,
+							media2,
+							media3,
+							media4,
+							content_id,
+							genre_id,
+							hit,like_cnt
+							FROM TEAMACREATERCONTENT)
+			WHERE	rank_num BETWEEN 2 AND 9
+		]]>
+	</select>
+	
+	<select id="getinviteList"
+		resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					genre_id,
+					hit,like_cnt
+			FROM	(SELECT ROW_NUMBER() OVER(ORDER BY hit DESC) AS rank_num,
+							title,
+							content_intro,
+							reg_date,
+							highlight,
+							tag,
+							age_rate,
+							don_reg,
+							game_launch,
+							don_attainment,
+							userid,
+							platform,
+							languages,
+							media1,
+							media2,
+							media3,
+							media4,
+							content_id,
+							genre_id,
+							hit,like_cnt
+							FROM TEAMACREATERCONTENT)
+			WHERE	rank_num BETWEEN 2 AND 9
+		]]>
+	</select>
+	
+	<select id="getrecommendList"
+		resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					genre_id,
+					hit,like_cnt
+			FROM	(SELECT ROW_NUMBER() OVER(ORDER BY like_cnt DESC) AS rank_num,
+							title,
+							content_intro,
+							reg_date,
+							highlight,
+							tag,
+							age_rate,
+							don_reg,
+							game_launch,
+							don_attainment,
+							userid,
+							platform,
+							languages,
+							media1,
+							media2,
+							media3,
+							media4,
+							content_id,
+							genre_id,
+							hit,like_cnt
+							FROM TEAMACREATERCONTENT)
+			WHERE	rank_num BETWEEN 2 AND 9
+		]]>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO teamacreatercontent(
+		title,
+		content_intro,
+		reg_date,
+		highlight,
+		tag,
+		age_rate,
+		don_reg,
+		game_launch,
+		don_attainment,
+		userid,
+		platform,
+		languages,
+		media1,
+		media2,
+		media3,
+		media4,
+		content_id,
+		genre_id,
+		hit,like_cnt
+		)
+		VALUES(
+		#{title},
+		#{content_intro},
+		sysdate,
+		sysdate,
+		#{tag},
+		#{age_rate},
+		sysdate,
+		#{game_launch},
+		#{don_attainment},
+		#{userid},
+		#{platform},
+		#{languages},
+		#{media1},
+		#{media2},
+		#{media3},
+		#{media4},
+		seq_reply.nextval,
+		#{genre_id},
+		#{hit},
+		#{like_cnt}
+		)
+	</insert>
+
+	<insert id="insertSelectKey">
+
+		<selectKey keyProperty="content_id" order="BEFORE"
+			resultType="long">
+			SELECT seq_board.nextval
+			FROM dual
+		</selectKey>
+		<![CDATA[
+		INSERT	INTO	teamacreatercontent(
+							title,
+							content_intro,
+							reg_date,
+							highlight,
+							tag,
+							age_rate,
+							don_reg,
+							game_launch,
+							don_attainment,
+							userid,
+							platform,
+							languages,
+							media1,
+							media2,
+							media3,
+							media4,
+							content_id,
+							genre_id,
+							hit,
+							like_cnt
+						)
+						VALUES(
+							#{title},
+							#{content_intro},
+							sysdate, sysdate, 
+							#{tag}, 
+							#{age_rate},
+							sysdate, 
+							#{game_launch}, 
+							#{don_attainment}, 
+							#{userid}, 
+							#{platform}, 
+							#{languages},
+							#{media1}, 
+							#{media2}, 
+							#{media3}, 
+							#{media4}, 
+							seq_reply.nextval, 
+							#{genre_id}, 
+							#{hit},
+							#{like_cnt}
+						)
+		 ]]>
+	</insert>
+
+
+	<select id="latestread" resultType="com.ync.project.domain.ContentVO">
+	SELECT  A.*
+	FROM 	teamacreatercontent A,
+			(SELECT max(reg_date) reg_date
+			 FROM 	teamacreatercontent
+			)B
+	WHERE A.reg_date = B.reg_date
+	</select>
+	
+	<select id="inviteread" resultType="com.ync.project.domain.ContentVO">
+	SELECT  A.*
+	FROM 	teamacreatercontent A,
+			(SELECT max(hit) hit
+			 FROM 	teamacreatercontent
+			)B
+	WHERE A.hit = B.hit
+	</select>
+	
+	<select id="recommendread" resultType="com.ync.project.domain.ContentVO">
+	SELECT  A.*
+	FROM 	teamacreatercontent A,
+			(SELECT max(like_cnt) like_cnt
+			 FROM 	teamacreatercontent
+			)B
+	WHERE A.like_cnt = B.like_cnt
+	</select>
+
+	<delete id="delete">
+		DELETE teamacreatercontent
+		WHERE content_id =
+		#{content_id}	
+	</delete>
+
+	<update id="update">
+		UPDATE teamacreatercontent
+		SET
+		title = #{title},
+		content_intro = #{content_intro},
+		reg_date = #{reg_date},
+		highlight = sysdate,
+		tag = #{tag},
+		age_rate = #{age_rate},
+		don_reg = sysdate,
+		game_launch = #{game_launch},
+		don_attainment = #{don_attainment},
+		userid = #{userid},
+		platform = #{platform},
+		languages = #{languages},
+		media1 = #{media1},
+		media2 = #{media2},
+		media3 = #{media3},
+		media4 = #{media4},
+		genre_id = #{genre_id},
+		hit = #{hit},
+		like_cnt = #{like_cnt}
+		WHERE content_id = #{content_id}
+	</update>
+</mapper>

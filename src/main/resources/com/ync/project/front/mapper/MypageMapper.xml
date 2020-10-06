@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ync.project.front.mapper.MypageMapper">
+
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+			<foreach item='type' collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'T'.toString()">
+							title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'C'.toString()">
+							content like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'W'.toString()">
+							writer like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+
+	
+	<select id="getList" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+		SELECT 	rownum rn,
+				title,
+				tag,
+				hit,
+				content_id
+		FROM 	(
+				SELECT /*+index(teamacreatercontent xpkteamacreatercontent */
+				 		rownum rn,
+						title,
+						tag,
+						hit,
+						content_id
+				FROM 	teamacreatercontent
+				WHERE   userid = #{userid}
+				AND	 	
+		]]>
+				<include refid="criteria"></include> 
+      
+		<![CDATA[    
+				rownum <= #{pageNum} * #{amount}
+      			)
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<select id="getFundList" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+		SELECT 	rownum rn,
+				title,
+				tag,
+				content_id,
+				donation
+		FROM 	(
+				SELECT /*+index(teamacreatercontent xpkteamacreatercontent */
+				 		rownum rn,
+						cc.title,
+						cc.tag,
+						done.content_id,
+						done.donation
+				FROM 	teamacreatercontent cc,
+						teamadonation done
+				WHERE   done.userid = #{userid}
+				AND		cc.content_id = done.content_id
+				AND	 	
+		]]>
+				<include refid="criteria"></include> 
+      
+		<![CDATA[    
+				rownum <= #{pageNum} * #{amount}
+      			)
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<!-- <insert id="insertSelectKey">
+
+		<selectKey keyProperty="content_id" order="BEFORE"
+			resultType="long">
+			select seq_board.nextval from dual
+		</selectKey>
+		<![CDATA[
+		insert into teamacreatercontent (title,content_intro,reg_date,highlight,tag,age_rate,
+		don_reg,game_launch,don_attainment,userid,platform,languages,media1,media2,media3,
+		media4,content_id,genre_id,hit,like_cnt)
+		values (#{title}, #{content_intro}, sysdate, sysdate, #{tag}, #{age_rate},
+		 sysdate, #{game_launch}, #{don_attainment}, #{userid}, #{platform}, #{languages},
+		 #{media1}, #{media2}, #{media3}, #{media4}, seq_reply.nextval, #{genre_id}, #{hit},
+		 #{like_cnt})
+		 ]]>
+	</insert> -->
+
+
+	<select id="read" resultType="com.ync.project.domain.ContentVO">
+	SELECT	content_id,
+			bookmark,
+			reg_date
+	FROM	teamabookmark
+	WHERE	content_id = #{content_id} 
+	</select>
+
+	<select id="getUploadTotalCount" resultType="int">
+	 SELECT count(*) FROM teamacreatercontent
+	 WHERE 	userid = #{userid}
+	</select>
+	
+	<select id="getFundTotalCount" resultType="int">
+	 SELECT count(*) FROM teamadonation
+	 WHERE 	userid = #{userid}
+	</select>
+	
+	<select id="getTotalCount" resultType="int">
+	 SELECT count(*) FROM TEAMABOOKMARK
+	 WHERE bookmark > 0
+	</select>
+</mapper>

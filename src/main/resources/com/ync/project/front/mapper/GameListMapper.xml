@@ -1,0 +1,879 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ync.project.front.mapper.GameListMapper">
+
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+			<foreach item='type' collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'T'.toString()">
+							title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'C'.toString()">
+							content_intro like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'W'.toString()">
+							userid like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'G'.toString()">
+							tag like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+	
+
+	<select id="getList" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					c.genre_id,
+					g.genre_name genre_name,
+					hit,
+					like_cnt
+			FROM	TEAMACREATERCONTENT c,
+      				TEAMAGENRE g
+			WHERE	c.genre_id = g.genre_id 
+			]]>
+	</select>
+	
+	<select id="getListWithPageByAdventure" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					cg.genre_id genre_id,
+					cg.genre_name genre_name,
+					hit,
+					like_cnt
+			FROM	(SELECT /*+INDEX_DESC(teamacreatercontent xpkteamacreatercontent) */
+						rownum rn,
+        				title,
+						content_intro,
+						reg_date,
+						highlight,
+						tag,
+						age_rate,
+						don_reg,
+						game_launch,
+						don_attainment,
+						userid,
+						platform,
+						languages,
+						media1,
+						media2,
+						media3,
+						media4,
+						content_id,
+						c.genre_id genre_id,
+						g.genre_name genre_name,
+						hit,
+						like_cnt
+      					FROM	TEAMACREATERCONTENT c,
+      							TEAMAGENRE g
+						WHERE 
+  		]]>
+								<include refid="criteria"></include> 
+      
+								<![CDATA[
+      							rownum <= #{pageNum} * #{amount}
+      					AND		c.genre_id = g.genre_id 
+      					AND		c.genre_id = g.genre_id
+      					AND		c.genre_id = 2
+      					) cg
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<select id="getListWithPageByRoguelike" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					cg.genre_id genre_id,
+					cg.genre_name genre_name,
+					hit,
+					like_cnt
+			FROM	(SELECT /*+INDEX_DESC(teamacreatercontent xpkteamacreatercontent) */
+						rownum rn,
+        				title,
+						content_intro,
+						reg_date,
+						highlight,
+						tag,
+						age_rate,
+						don_reg,
+						game_launch,
+						don_attainment,
+						userid,
+						platform,
+						languages,
+						media1,
+						media2,
+						media3,
+						media4,
+						content_id,
+						c.genre_id genre_id,
+						g.genre_name genre_name,
+						hit,
+						like_cnt
+      					FROM	TEAMACREATERCONTENT c,
+      							TEAMAGENRE g
+						WHERE 
+  		]]>
+								<include refid="criteria"></include> 
+      
+								<![CDATA[
+      							rownum <= #{pageNum} * #{amount}
+      					AND		c.genre_id = g.genre_id
+      					AND		c.genre_id = 3
+      					) cg
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<select id="getListWithPageByPuzzle" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					cg.genre_id genre_id,
+					cg.genre_name genre_name,
+					hit,
+					like_cnt
+			FROM	(SELECT /*+INDEX_DESC(teamacreatercontent xpkteamacreatercontent) */
+						rownum rn,
+        				title,
+						content_intro,
+						reg_date,
+						highlight,
+						tag,
+						age_rate,
+						don_reg,
+						game_launch,
+						don_attainment,
+						userid,
+						platform,
+						languages,
+						media1,
+						media2,
+						media3,
+						media4,
+						content_id,
+						c.genre_id genre_id,
+						g.genre_name genre_name,
+						hit,
+						like_cnt
+      					FROM	TEAMACREATERCONTENT c,
+      							TEAMAGENRE g
+						WHERE 
+  		]]>
+								<include refid="criteria"></include> 
+      
+								<![CDATA[
+      							rownum <= #{pageNum} * #{amount}
+      					AND		c.genre_id = g.genre_id
+      					AND		c.genre_id = 4
+      					) cg
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<select id="getListWithPageByRhythm" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					cg.genre_id genre_id,
+					cg.genre_name genre_name,
+					hit,
+					like_cnt
+			FROM	(SELECT /*+INDEX_DESC(teamacreatercontent xpkteamacreatercontent) */
+						rownum rn,
+        				title,
+						content_intro,
+						reg_date,
+						highlight,
+						tag,
+						age_rate,
+						don_reg,
+						game_launch,
+						don_attainment,
+						userid,
+						platform,
+						languages,
+						media1,
+						media2,
+						media3,
+						media4,
+						content_id,
+						c.genre_id genre_id,
+						g.genre_name genre_name,
+						hit,
+						like_cnt
+      					FROM	TEAMACREATERCONTENT c,
+      							TEAMAGENRE g
+						WHERE 
+  		]]>
+								<include refid="criteria"></include> 
+      
+								<![CDATA[
+      							rownum <= #{pageNum} * #{amount}
+      					AND		c.genre_id = g.genre_id
+      					AND		c.genre_id = 5
+      					) cg
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<select id="getListWithPageByHorror" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					cg.genre_id genre_id,
+					cg.genre_name genre_name,
+					hit,
+					like_cnt
+			FROM	(SELECT /*+INDEX_DESC(teamacreatercontent xpkteamacreatercontent) */
+						rownum rn,
+        				title,
+						content_intro,
+						reg_date,
+						highlight,
+						tag,
+						age_rate,
+						don_reg,
+						game_launch,
+						don_attainment,
+						userid,
+						platform,
+						languages,
+						media1,
+						media2,
+						media3,
+						media4,
+						content_id,
+						c.genre_id genre_id,
+						g.genre_name genre_name,
+						hit,
+						like_cnt
+      					FROM	TEAMACREATERCONTENT c,
+      							TEAMAGENRE g
+						WHERE 
+  		]]>
+								<include refid="criteria"></include> 
+      
+								<![CDATA[
+      							rownum <= #{pageNum} * #{amount}
+      					AND		c.genre_id = g.genre_id
+      					AND		c.genre_id = 6
+      					) cg
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<select id="getListWithPageBySimulation" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					cg.genre_id genre_id,
+					cg.genre_name genre_name,
+					hit,
+					like_cnt
+			FROM	(SELECT /*+INDEX_DESC(teamacreatercontent xpkteamacreatercontent) */
+						rownum rn,
+        				title,
+						content_intro,
+						reg_date,
+						highlight,
+						tag,
+						age_rate,
+						don_reg,
+						game_launch,
+						don_attainment,
+						userid,
+						platform,
+						languages,
+						media1,
+						media2,
+						media3,
+						media4,
+						content_id,
+						c.genre_id genre_id,
+						g.genre_name genre_name,
+						hit,
+						like_cnt
+      					FROM	TEAMACREATERCONTENT c,
+      							TEAMAGENRE g
+						WHERE 
+  		]]>
+								<include refid="criteria"></include> 
+      
+								<![CDATA[
+      							rownum <= #{pageNum} * #{amount}
+      					AND		c.genre_id = g.genre_id
+      					AND		c.genre_id = 7
+      					) cg
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<select id="getListWithPageByCasual" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					cg.genre_id genre_id,
+					cg.genre_name genre_name,
+					hit,
+					like_cnt
+			FROM	(SELECT /*+INDEX_DESC(teamacreatercontent xpkteamacreatercontent) */
+						rownum rn,
+        				title,
+						content_intro,
+						reg_date,
+						highlight,
+						tag,
+						age_rate,
+						don_reg,
+						game_launch,
+						don_attainment,
+						userid,
+						platform,
+						languages,
+						media1,
+						media2,
+						media3,
+						media4,
+						content_id,
+						c.genre_id genre_id,
+						g.genre_name genre_name,
+						hit,
+						like_cnt
+      					FROM	TEAMACREATERCONTENT c,
+      							TEAMAGENRE g
+						WHERE 
+  		]]>
+								<include refid="criteria"></include> 
+      
+								<![CDATA[
+      							rownum <= #{pageNum} * #{amount}
+      					AND		c.genre_id = g.genre_id
+      					AND		c.genre_id = 8
+      					) cg
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<select id="getListWithPageByStrategy" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					cg.genre_id genre_id,
+					cg.genre_name genre_name,
+					hit,
+					like_cnt
+			FROM	(SELECT /*+INDEX_DESC(teamacreatercontent xpkteamacreatercontent) */
+						rownum rn,
+        				title,
+						content_intro,
+						reg_date,
+						highlight,
+						tag,
+						age_rate,
+						don_reg,
+						game_launch,
+						don_attainment,
+						userid,
+						platform,
+						languages,
+						media1,
+						media2,
+						media3,
+						media4,
+						content_id,
+						c.genre_id genre_id,
+						g.genre_name genre_name,
+						hit,
+						like_cnt
+      					FROM	TEAMACREATERCONTENT c,
+      							TEAMAGENRE g
+						WHERE 
+  		]]>
+								<include refid="criteria"></include> 
+      
+								<![CDATA[
+      							rownum <= #{pageNum} * #{amount}
+      					AND		c.genre_id = g.genre_id
+      					AND		c.genre_id = 9
+      					) cg
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	
+	
+	<insert id="insert">
+		INSERT INTO teamacreatercontent(
+		title,
+		content_intro,
+		reg_date,
+		highlight,
+		tag,
+		age_rate,
+		don_reg,
+		game_launch,
+		don_attainment,
+		userid,
+		platform,
+		languages,
+		media1,
+		media2,
+		media3,
+		media4,
+		content_id,
+		genre_id,
+		hit,like_cnt
+		)
+		VALUES(
+		#{title},
+		#{content_intro},
+		sysdate,
+		sysdate,
+		#{tag},
+		#{age_rate},
+		sysdate,
+		#{game_launch},
+		#{don_attainment},
+		#{userid},
+		#{platform},
+		#{languages},
+		#{media1},
+		#{media2},
+		#{media3},
+		#{media4},
+		seq_reply.nextval,
+		#{genre_id},
+		#{hit},
+		#{like_cnt}
+		)
+	</insert>
+
+	<insert id="insertSelectKey">
+
+		<selectKey keyProperty="content_id" order="BEFORE"
+			resultType="long">
+			SELECT seq_board.nextval
+			FROM dual
+		</selectKey>
+		<![CDATA[
+		INSERT	INTO	teamacreatercontent(
+							title,
+							content_intro,
+							reg_date,
+							highlight,
+							tag,
+							age_rate,
+							don_reg,
+							game_launch,
+							don_attainment,
+							userid,
+							platform,
+							languages,
+							media1,
+							media2,
+							media3,
+							media4,
+							content_id,
+							genre_id,
+							hit,
+							like_cnt
+						)
+						VALUES(
+							#{title},
+							#{content_intro},
+							sysdate, sysdate, 
+							#{tag}, 
+							#{age_rate},
+							sysdate, 
+							#{game_launch}, 
+							#{don_attainment}, 
+							#{userid}, 
+							#{platform}, 
+							#{languages},
+							#{media1}, 
+							#{media2}, 
+							#{media3}, 
+							#{media4}, 
+							seq_reply.nextval, 
+							#{genre_id}, 
+							#{hit},
+							#{like_cnt}
+						)
+		 ]]>
+	</insert>
+	
+	<select id="Act" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					cg.genre_id genre_id,
+					cg.genre_name genre_name,
+					hit,
+					like_cnt
+			FROM	(SELECT /*+INDEX_DESC(teamacreatercontent xpkteamacreatercontent) */
+						rownum rn,
+        				title,
+						content_intro,
+						reg_date,
+						highlight,
+						tag,
+						age_rate,
+						don_reg,
+						game_launch,
+						don_attainment,
+						userid,
+						platform,
+						languages,
+						media1,
+						media2,
+						media3,
+						media4,
+						content_id,
+						c.genre_id genre_id,
+						g.genre_name genre_name,
+						hit,
+						like_cnt
+      					FROM	TEAMACREATERCONTENT c,
+      							TEAMAGENRE g
+						WHERE 
+  		]]>
+								<include refid="criteria"></include> 
+      
+								<![CDATA[
+      							rownum <= #{pageNum} * #{amount}
+      					AND		c.genre_id = g.genre_id 
+      					AND		c.genre_id = g.genre_id
+      					AND		c.genre_id = 1
+      					) cg
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+
+	<select id="read" resultType="com.ync.project.domain.ContentVO">
+	SELECT  A.*
+	FROM 	teamacreatercontent A,
+			(SELECT max(reg_date) reg_date
+			 FROM 	teamacreatercontent
+			)B
+	WHERE A.reg_date = B.reg_date
+	</select>
+	
+	<select id="read1" resultType="com.ync.project.domain.ContentVO">
+	SELECT  A.*
+	FROM 	teamacreatercontent A,
+			(SELECT max(hit) hit
+			 FROM 	teamacreatercontent
+			)B
+	WHERE A.hit = B.hit
+	</select>
+	
+	<select id="read2" resultType="com.ync.project.domain.ContentVO">
+	SELECT  A.*
+	FROM 	teamacreatercontent A,
+			(SELECT max(like_cnt) like_cnt
+			 FROM 	teamacreatercontent
+			)B
+	WHERE A.like_cnt = B.like_cnt
+	</select>
+
+	<delete id="delete">
+		DELETE teamacreatercontent
+		WHERE content_id =
+		#{content_id}	
+	</delete>
+
+	<update id="update">
+		UPDATE teamacreatercontent
+		SET
+		title = #{title},
+		content_intro = #{content_intro},
+		reg_date = #{reg_date},
+		highlight = sysdate,
+		tag = #{tag},
+		age_rate = #{age_rate},
+		don_reg = sysdate,
+		game_launch = #{game_launch},
+		don_attainment = #{don_attainment},
+		userid = #{userid},
+		platform = #{platform},
+		languages = #{languages},
+		media1 = #{media1},
+		media2 = #{media2},
+		media3 = #{media3},
+		media4 = #{media4},
+		genre_id = #{genre_id},
+		hit = #{hit},
+		like_cnt = #{like_cnt}
+		WHERE content_id = #{content_id}
+	</update>
+	
+	<select id="getListWithPaging" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+			SELECT	title,
+					content_intro,
+					reg_date,
+					highlight,
+					tag,
+					age_rate,
+					don_reg,
+					game_launch,
+					don_attainment,
+					userid,
+					platform,
+					languages,
+					media1,
+					media2,
+					media3,
+					media4,
+					content_id,
+					cg.genre_id genre_id,
+					cg.genre_name genre_name,
+					hit,
+					like_cnt
+			FROM	(SELECT /*+INDEX_DESC(teamacreatercontent xpkteamacreatercontent) */
+						rownum rn,
+        				title,
+						content_intro,
+						reg_date,
+						highlight,
+						tag,
+						age_rate,
+						don_reg,
+						game_launch,
+						don_attainment,
+						userid,
+						platform,
+						languages,
+						media1,
+						media2,
+						media3,
+						media4,
+						content_id,
+						c.genre_id genre_id,
+						g.genre_name genre_name,
+						hit,
+						like_cnt
+      					FROM	TEAMACREATERCONTENT c,
+      							TEAMAGENRE g
+						WHERE 
+  		]]>
+								<include refid="criteria"></include> 
+      
+								<![CDATA[
+      							rownum <= #{pageNum} * #{amount}
+      					AND		c.genre_id = g.genre_id 
+      					) cg
+  			WHERE rn > (#{pageNum} -1) * #{amount}   
+		]]>
+	</select>
+	
+	<select id="getTotalCount" resultType="int">
+	 SELECT count(*)
+	 FROM teamacreatercontent
+	 WHERE genre_id >= 0
+	</select>
+	
+	<select id="getactTotal" resultType="int">
+	 SELECT count(*) FROM teamacreatercontent
+	 WHERE genre_id = 1
+	</select>
+	
+	<select id="getadvTotal" resultType="int">
+	 SELECT count(*) FROM teamacreatercontent
+	 WHERE genre_id = 2
+	</select>
+	
+	<select id="getrogTotal" resultType="int">
+	 SELECT count(*) FROM teamacreatercontent
+	 WHERE genre_id = 3
+	</select>
+	
+	<select id="getpuzTotal" resultType="int">
+	 SELECT count(*) FROM teamacreatercontent
+	 WHERE genre_id = 4
+	</select>
+	
+	<select id="getrhyTotal" resultType="int">
+	 SELECT count(*) FROM teamacreatercontent
+	 WHERE genre_id = 5
+	</select>
+	
+	<select id="gethorTotal" resultType="int">
+	 SELECT count(*) FROM teamacreatercontent
+	 WHERE genre_id = 6
+	</select>
+	
+	<select id="getsimTotal" resultType="int">
+	 SELECT count(*) FROM teamacreatercontent
+	 WHERE genre_id = 7
+	</select>
+	
+	<select id="getcasTotal" resultType="int">
+	 SELECT count(*) FROM teamacreatercontent
+	 WHERE genre_id = 8
+	</select>
+	
+	<select id="getstrTotal" resultType="int">
+	 SELECT count(*) FROM teamacreatercontent
+	 WHERE genre_id = 9
+	</select>
+</mapper>

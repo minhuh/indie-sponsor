@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ync.project.front.mapper.CommentMapper">
+
+	<insert id="insert">
+	
+		INSERT INTO teamacomment (comment_id,
+		 						  content_id,
+		 						  userid,
+		 						  reg_date,
+		 						  content
+		 						  )
+								VALUES 
+								(
+								 teama_comment.nextval,
+								 #{content_id},
+								 #{userid},
+								 sysdate,
+								 #{content}
+								 )
+		
+	</insert>
+	
+	<select id="read" resultType="com.ync.project.domain.CommentVO">
+	
+		SELECT * FROM teamacomment WHERE comment_id = #{comment_id}
+	
+	</select>
+	
+	<delete id="delete">
+	
+		DELETE FROM teamacomment WHERE comment_id = #{comment_id}
+	
+	</delete>
+	
+	<update id="update">
+	
+		UPDATE teamacomment 
+		SET content = #{content}, reg_date = sysdate 
+		WHERE comment_id = #{comment_id}
+	
+	</update>
+	
+	<select id = "getListWithPaging"
+		resultType="com.ync.project.domain.CommentVO">
+		<![CDATA[
+		SELECT 	comment_id,
+		 		content_id,
+			  	userid,
+			  	reg_date,
+			  	content
+		FROM 	(
+				SELECT /*+index(teamacomment xpkteamacommnet */
+				 rownum rn,
+				 comment_id,
+				 content_id,
+				 userid,
+				 reg_date,
+				 content
+				FROM teamacomment
+				WHERE 	content_id = #{content_id}
+				AND	 rownum <= #{cri.pageNum} * #{cri.amount}
+			   ) WHERE rn > (#{cri.pageNum} -1) * #{cri.amount}
+		]]>
+	</select>
+	
+	<select id="getCountByBno" resultType="int">
+	<![CDATA[
+	SELECT COUNT(comment_id)
+	FROM   teamacomment
+	WHERE  content_id = #{content_id}
+	]]>
+	</select>
+	
+</mapper>

@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ync.project.front.mapper.ChangelogMapper">
+
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+			<foreach item='type' collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'T'.toString()">
+							title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'C'.toString()">
+							content like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'W'.toString()">
+							writer like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+	
+	<select id="getTotalCount" resultType="int">
+		select count(*) from teamachangelog where
+
+		<include refid="criteria"></include>
+
+		change_log_id > 0
+
+	</select>
+	
+	<select id="getList" resultType="com.ync.project.domain.ChangelogVO">
+		<![CDATA[
+				SELECT  title,
+					 	version, 
+						cl.reg_date, 
+						ct.media2, 
+						change_log_id
+				FROM    TEAMACREATERCONTENT ct, 
+					 	TEAMACHANGELOG cl
+				WHERE  ct.CONTENT_ID = cl.CONTENT_ID
+			]]>
+	</select>
+
+	<insert id="insert">
+	<![CDATA[
+		INSERT INTO TEAMACHANGELOG(
+		change_log_id,
+		reg_date,
+		version,
+		game_launch,
+		media1,
+		media2,
+		media3,
+		media4,
+		patch_log,
+		content_id
+		)
+		VALUES(
+		seq_changelog.nextval,
+		sysdate,
+		#{version},
+		#{game_launch},
+		#{media1},
+		#{media2},
+		#{media3},
+		#{media4},
+		#{patch_log},
+		#{content_id}
+		)
+		]]>
+	</insert>
+	
+	<select id="getListWithPaging" resultType="com.ync.project.domain.ChangelogVO">
+		<![CDATA[
+		SELECT  DISTINCT cl.change_log_id,
+				ct.title,
+				cl.version, 
+				cl.reg_date, 
+				ct.media2
+		FROM	(SELECT /*+INDEX_DESC(teamachangelog cl_board) */
+						DISTINCT change_log_id,
+						rownum rn,
+						reg_date
+      			 FROM   TEAMACHANGELOG
+				 WHERE  reg_date IS NOT null AND 
+		]]>
+		<include refid="criteria"></include> 
+		<![CDATA[
+				rownum <= #{pageNum} * #{amount}
+				) ge,
+      			TEAMACREATERCONTENT ct, 
+				TEAMACHANGELOG cl
+  		WHERE rn > (#{pageNum} -1) * #{amount}   
+  		AND   ct.CONTENT_ID = cl.CONTENT_ID
+  		AND   ge.change_log_id = cl.CHANGE_LOG_ID
+  		ORDER BY reg_date DESC
+		]]>
+	</select>
+
+	<select id="read" resultType="com.ync.project.domain.ChangelogVO">
+	<![CDATA[
+		SELECT  DISTINCT ct.title,
+				cl.version,
+				cl.game_launch,
+				NVL(cl.media1,0) AS cmedia1,
+				NVL(cl.media2,0) AS cmedia2,
+				NVL(cl.media3,0) AS cmedia3,
+				NVL(cl.media4,0) AS cmedia4,
+				cl.patch_log,
+				NVL(ct.media1,0) AS media1,
+				NVL(ct.media2,0) AS media2,
+				NVL(ct.media3,0) AS media3,
+				NVL(ct.media4,0) AS media4,
+				ct.tag,
+				cl.reg_date,
+				ct.userid,
+				cl.change_log_id
+		from 	teamachangelog cl,
+			 	teamacreatercontent ct
+		where   change_log_id = #{change_log_id} 
+		AND		cl.content_id = ct.content_id  
+		]]>
+	</select>
+	
+	<select id="readComment" resultType="com.ync.project.domain.ChangelogVO">
+	<![CDATA[
+		SELECT 	MAX(tc.content_id) AS content_id, 
+				MAX(content) AS content, 
+				MAX(userid) AS userid,
+				MAX(tc.reg_date) AS reg_date
+		FROM   	TeamAComment tc,
+				TeamAChangelog cl
+		WHERE   cl.content_id = tc.content_id
+		AND		cl.change_log_id = #{change_log_id}
+		]]>
+	</select>
+	
+	<select id="readpatchnoteList" resultType="com.ync.project.domain.ChangelogVO">
+	<![CDATA[
+		SELECT 	rownum,
+				cl.patch_log,
+	  		 	cl.reg_date,
+	   			cl.content_id,
+	   			cl.version,
+	   			cl.change_log_id
+		FROM   (SELECT 	content_id
+				FROM   TEAMACHANGELOG
+				WHERE  change_log_id = #{change_log_id}
+				) tcl, 
+				TeamAChangelog cl
+		WHERE   cl.content_id = tcl.content_id
+		AND     rownum < 6
+		]]>
+	</select>
+	
+	<select id="readother_patch" resultType="com.ync.project.domain.ChangelogVO">
+	<![CDATA[
+		SELECT 	DISTINCT cl.content_id,
+				rownum,
+				ct.media2,
+				cl.patch_log,
+				ct.title,
+				cl.reg_date,
+				cl.change_log_id
+		FROM   (SELECT content_id
+				FROM   TEAMACHANGELOG
+				WHERE  change_log_id = #{change_log_id}
+				) tcl, 
+				TeamACreaterContent ct,
+				TeamAChangelog cl
+		WHERE   cl.content_id = ct.content_id
+		AND 	ct.content_id != tcl.content_id
+		AND     rownum < 6
+		ORDER BY content_id
+		]]>
+	</select>
+	
+	<select id="getMygame_list" resultType="com.ync.project.domain.ContentVO">
+	<![CDATA[
+		SELECT  title,
+				content_id
+		from 	teamacreatercontent ct
+		where   userid = #{userid}
+		]]>
+	</select>
+	
+</mapper>
